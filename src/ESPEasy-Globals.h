@@ -1,3 +1,4 @@
+#define _735LABS
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
 
@@ -316,6 +317,7 @@
 #define SENSOR_TYPE_DUAL                    5
 #define SENSOR_TYPE_TRIPLE                  6
 #define SENSOR_TYPE_QUAD                    7
+#define SENSOR_TYPE_TEMP_EMPTY_BARO         8
 #define SENSOR_TYPE_SWITCH                 10
 #define SENSOR_TYPE_DIMMER                 11
 #define SENSOR_TYPE_LONG                   20
@@ -389,7 +391,9 @@
   #include <ESP8266WebServer.h>
   ESP8266WebServer WebServer(80);
   #include <DNSServer.h>
+#if defined(ESP8266_FAT)
   #include <Servo.h>
+#endif
   #include <ESP8266HTTPUpdateServer.h>
   ESP8266HTTPUpdateServer httpUpdater(true);
   #ifndef LWIP_OPEN_SRC
@@ -1094,6 +1098,9 @@ struct LogStruct {
     String Message[LOG_STRUCT_MESSAGE_LINES];
 
 } Logging;
+
+byte highest_active_log_level = 0;
+bool log_to_serial_disabled = false;
 
 struct DeviceStruct
 {

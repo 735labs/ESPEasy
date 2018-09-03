@@ -3,6 +3,7 @@
 
 #define PGMT( pgm_ptr ) ( reinterpret_cast< const __FlashStringHelper * >( pgm_ptr ) )
 
+#if defined(ESP8266_FAT)
 /*********************************************************************************************\
  * ESP Easy logo Favicon.ico 16x16 8 bit
 \*********************************************************************************************/
@@ -135,6 +136,8 @@ static const char githublogo[] PROGMEM = {
   "alert('Copied: \"' + clipboard + '\" to clipboard!') }"
   "</script>"
 };
+
+#endif
 
 static const char pgDefaultCSS[] PROGMEM = {
     //color scheme: #07D #D50 #DB0 #A0D

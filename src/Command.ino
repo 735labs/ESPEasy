@@ -68,7 +68,9 @@ Command commandStringToEnum(const char * cmd) {
     case 'd': {
            if (strcmp_P(cmd_lc, PSTR("debug")                 ) == 0) return cmd_Debug;
       else if (strcmp_P(cmd_lc, PSTR("delay")                 ) == 0) return cmd_Delay;
-      else if (strcmp_P(cmd_lc, PSTR("deepsleep")             ) == 0) return cmd_deepSleep;
+      #if defined(ESP8266_FAT)
+        else if (strcmp_P(cmd_lc, PSTR("deepsleep")             ) == 0) return cmd_deepSleep;
+      #endif
       else if (strcmp_P(cmd_lc, PSTR("dns")                   ) == 0) return cmd_DNS;
       else if (strcmp_P(cmd_lc, PSTR("dst")                   ) == 0) return cmd_DST;
       break;
@@ -460,6 +462,7 @@ void ExecuteCommand(byte source, const char *Line)
     break;
   }
 
+#if defined(ESP8266_FAT)
   case cmd_deepSleep:
   {
     success = true;
@@ -467,6 +470,7 @@ void ExecuteCommand(byte source, const char *Line)
       deepSleepStart(Par1); // call the second part of the function to avoid check and enable one-shot operation
     break;
   }
+#endif
 
   case cmd_TaskValueSet:
   {

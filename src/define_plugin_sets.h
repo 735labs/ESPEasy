@@ -21,10 +21,13 @@ To create/register a plugin, you have to :
 
 
 
-
 /******************************************************************************\
  * BUILD Configs *******************************************************************
 \******************************************************************************/
+
+#ifndef _735LABS
+    #define _735LABS
+#endif
 
 #ifdef PLUGIN_BUILD_DEV
     #define  PLUGIN_SET_EXPERIMENTAL
@@ -93,6 +96,18 @@ To create/register a plugin, you have to :
     // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
     #define USES_P077	// CSE7766
     #define DEFAULT_PIN_STATUS_LED 13 // GPIO13 Blue Led (0 = On, 1 = Off)
+#endif
+
+#ifdef PLUGIN_SET_BLITZWOLF_SHP2
+    // Undef first to prevent compiler warnings
+//    #undef DEFAULT_PIN_STATUS_LED
+
+    #define CONTROLLER_SET_ONLY_MQTT
+    #define NOTIFIER_SET_NONE
+    #define PLUGIN_SET_ONLY_SWITCH
+    #define USES_P076   // HLW8012 Blitzwolf SHP2
+
+//    #define DEFAULT_PIN_STATUS_LED 13 // GPIO13 Blue Led (0 = On, 1 = Off)
 #endif
 
 #ifdef PLUGIN_SET_SONOFF_S20
@@ -187,6 +202,14 @@ To create/register a plugin, you have to :
 /******************************************************************************\
  * "ONLY" shorcuts ************************************************************
 \******************************************************************************/
+#ifdef CONTROLLER_SET_ONLY_MQTT
+    #ifndef CONTROLLER_SET_NONE
+        #define CONTROLLER_SET_NONE
+    #endif
+
+    #define USES_C005   // OpenHAB MQTT
+#endif
+
 #ifdef PLUGIN_SET_ONLY_SWITCH
     #ifndef PLUGIN_SET_NONE
         #define PLUGIN_SET_NONE
@@ -330,6 +353,33 @@ To create/register a plugin, you have to :
 
 // STABLE #####################################
 #ifdef PLUGIN_SET_STABLE
+
+  #ifdef _735LABS
+
+    #define USES_P001   // Switch
+    #define USES_P002   // ADC
+    #define USES_P003   // Pulse
+    #define USES_P004   // Dallas
+//    #define USES_P005   // DHT
+    #define USES_P014   // SI7021
+    #define USES_P025   // ADS1115
+    #define USES_P026   // SysInfo
+//    #define USES_P027   // INA219
+    #define USES_P028   // BME280
+    #define USES_P030   // BMP280
+    #define USES_P033   // Dummy
+    #define USES_P037   // MQTTImport
+
+    // from testing
+    #define USES_P072   // HDC1080
+    #define USES_P076   // HLW8012 Blitzwolf SHP2
+    #define USES_P077   // CSE7766 Sonoff POW2
+
+    // from playground
+    #define USES_P118  // CCS811
+
+  #else
+
     #define USES_P001   // Switch
     #define USES_P002   // ADC
     #define USES_P003   // Pulse
@@ -385,10 +435,17 @@ To create/register a plugin, you have to :
     #define USES_P059   // Encoder
 
     #define USES_P063   // TTP229_KeyPad
+
+  #endif
 #endif
 
 
 #ifdef CONTROLLER_SET_STABLE
+  #ifdef _735LABS
+    #define USES_C005   // OpenHAB MQTT
+    #define USES_C010   // Generic UDP
+    #define USES_C011   // Generic HTTP Advanced
+  #else
     #define USES_C001   // Domoticz HTTP
     #define USES_C002   // Domoticz MQTT
     #define USES_C003   // Nodo telnet
@@ -400,12 +457,16 @@ To create/register a plugin, you have to :
     #define USES_C009   // FHEM HTTP
     #define USES_C010   // Generic UDP
     #define USES_C013   // ESPEasy P2P network
+  #endif
 #endif
 
 
 #ifdef NOTIFIER_SET_STABLE
+  #ifdef _735LABS
+  #else
     #define USES_N001   // Email
     #define USES_N002   // Buzzer
+  #endif
 #endif
 
 

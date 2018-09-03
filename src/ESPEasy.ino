@@ -396,6 +396,7 @@ void loop()
      timerAwakeFromDeepSleep = millis(); // Allow to run for "awake" number of seconds, now we have wifi.
    }
 
+  #if defined(ESP8266_FAT)
   // Deep sleep mode, just run all tasks one (more) time and go back to sleep as fast as possible
   if ((firstLoopWiFiConnected || readyForSleep()) && isDeepSleepEnabled())
   {
@@ -408,6 +409,7 @@ void loop()
   }
   //normal mode, run each task when its time
   else
+  #endif
   {
 
     if (timeOutReached(timer20ms))
@@ -430,6 +432,7 @@ void loop()
 
   backgroundtasks();
 
+  #if defined(ESP8266_FAT)
   if (readyForSleep()){
     if (Settings.UseRules)
     {
@@ -442,6 +445,7 @@ void loop()
     deepSleep(Settings.Delay);
     //deepsleep will never return, its a special kind of reboot
   }
+  #endif
 }
 
 
@@ -639,7 +643,7 @@ void runEach30Seconds()
   sendSysInfoUDP(1);
   refreshNodeList();
 
-  #if defined(ESP8266)
+  #if defined(ESP8266_FAT)
   if (Settings.UseSSDP)
     SSDP_update();
   #endif
@@ -678,6 +682,7 @@ void checkSensors()
         timerSensor[x] = 1;
       SensorSendTask(x);
     }
+    delay(1);
   }
   saveUserVarToRTC();
 }

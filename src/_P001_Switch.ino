@@ -7,7 +7,7 @@
 #define PLUGIN_ID_001         1
 #define PLUGIN_NAME_001       "Switch input - Switch"
 #define PLUGIN_VALUENAME1_001 "Switch"
-#if defined(ESP8266)
+#if defined(ESP8266_FAT)
   Servo servo1;
   Servo servo2;
 #endif
@@ -141,9 +141,9 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         String device = parseString(string, 1);
         String command = parseString(string, 2);
         String strPar1 = parseString(string, 3);
-        int par1 = strPar1.toInt();
         if (device == F("gpio") && command == F("pinstate"))
         {
+          int par1 = strPar1.toInt();
           string = digitalRead(par1);
           success = true;
         }
@@ -302,6 +302,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           }
         }
 
+#if defined(ESP8266_FAT)
         if (command == F("pulse"))
         {
           success = true;
@@ -324,6 +325,9 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           success = true;
           if (event->Par1 >= 0 && event->Par1 <= PIN_D_MAX)
           {
+            const bool pinStateHigh = event->Par2 != 0;
+            const uint16_t pinStateValue = pinStateHigh ? 1 : 0;
+            const uint16_t inversePinStateValue = pinStateHigh ? 0 : 1;
             pinMode(event->Par1, OUTPUT);
             digitalWrite(event->Par1, event->Par2);
             setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, event->Par2);
@@ -362,6 +366,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_INFO, log);
           SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par2, log, 0));
         }
+#endif
 
         if (command == F("status"))
         {
@@ -387,6 +392,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           UserVar[event->Par1 * VARS_PER_TASK] = event->Par2;
           outputstate[event->Par1] = event->Par2;
         }
+
+#if defined(ESP8266_FAT)
 
         // FIXME: Absolutely no error checking in play_rtttl, until then keep it only in testing
         //play a tune via a RTTTL string, look at https://www.letscontrolit.com/forum/viewtopic.php?f=4&t=343&hilit=speaker&start=10 for more info.
@@ -422,6 +429,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
           }
         }
+
+#endif
 
         break;
       }

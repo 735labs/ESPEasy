@@ -431,14 +431,16 @@ void WebServerInit()
   WebServer.on(F("/rules"), handle_rules);
   WebServer.on(F("/sysinfo"), handle_sysinfo);
   WebServer.on(F("/pinstates"), handle_pinstates);
-  WebServer.on(F("/favicon.ico"), handle_favicon);
+  //if defined(ESP8266_FAT)
+    WebServer.on(F("/favicon.ico"), handle_favicon);
+  //endif
 
   #if defined(ESP8266)
     if (ESP.getFlashChipRealSize() > 524288)
       httpUpdater.setup(&WebServer);
   #endif
 
-  #if defined(ESP8266)
+  #if defined(ESP8266_FAT)
   if (Settings.UseSSDP)
   {
     WebServer.on(F("/ssdp.xml"), HTTP_GET, []() {
@@ -490,10 +492,6 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
               "</span>"
               "{{content}}"
               "</section>"
-              "<footer>"
-                "<br>"
-                "<h6>Powered by <a href='http://www.letscontrolit.com' style='font-size: 15px; text-decoration: none'>www.letscontrolit.com</a></h6>"
-              "</footer>"
               "</body>"            );
   }
   else if (tmplName == F("TmplMsg"))
@@ -516,10 +514,6 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
               "</span>"
               "{{content}}"
               "</section>"
-              "<footer>"
-                "<br>"
-                "<h6>Powered by <a href='http://www.letscontrolit.com' style='font-size: 15px; text-decoration: none'>www.letscontrolit.com</a></h6>"
-              "</footer>"
               "</body>"
             );
   }
@@ -562,10 +556,6 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
         "</span>"
         "{{content}}"
         "</section>"
-        "<footer>"
-          "<br>"
-          "<h6>Powered by <a href='http://www.letscontrolit.com' style='font-size: 15px; text-decoration: none'>www.letscontrolit.com</a></h6>"
-        "</footer>"
       "</body></html>"
             );
   }
@@ -1004,8 +994,10 @@ void handle_config() {
     }
 
     Settings.Delay = sensordelay.toInt();
-    Settings.deepSleep = deepsleep.toInt();
-    Settings.deepSleepOnFail = (deepsleeponfail == F("on"));
+    #if defined(ESP8266_FAT)
+      Settings.deepSleep = deepsleep.toInt();
+      Settings.deepSleepOnFail = (deepsleeponfail == F("on"));
+    #endif
     str2ip(espip, Settings.IP);
     str2ip(espgateway, Settings.Gateway);
     str2ip(espsubnet, Settings.Subnet);
@@ -1057,7 +1049,7 @@ void handle_config() {
   addFormIPBox(F("ESP DNS"), F("espdns"), Settings.DNS);
   addFormNote(F("Leave empty for DHCP"));
 
-
+#if defined(ESP8266_FAT)
   addFormSubHeader(F("Sleep Mode"));
 
   addFormNumericBox( F("Sleep awake time"), F("deepsleep"), Settings.deepSleep, 0, 255);
@@ -1069,7 +1061,7 @@ void handle_config() {
   addUnit(F("sec"));
 
   addFormCheckBox(F("Sleep on connection failure"), F("deepsleeponfail"), Settings.deepSleepOnFail);
-
+#endif
   addFormSeparator(2);
 
   TXBuffer += F("<TR><TD style='width:150px;' align='left'><TD>");
@@ -1139,7 +1131,7 @@ void handle_controllers() {
         TempEvent.String2 = "";
         TempEvent.String3 = "";
         TempEvent.String4 = "";
-        TempEvent.String5 = "";                
+        TempEvent.String5 = "";
         //NOTE: do not enable controller by default, give user a change to enter sensible values first
 
         //not resetted to default (for convenience)
@@ -3616,6 +3608,11 @@ void handle_json()
       stream_next_json_object_value(F("Reset Reason"), ESP.getResetReason());
       #endif
 
+      #if defined(ESP8266)
+         stream_next_json_object_value(F("ESP chip id"), String(ESP.getChipId()));
+         stream_next_json_object_value(F("Flash chip id"), String(ESP.getFlashChipId()));
+      #endif
+
       if (wdcounter > 0)
       {
           stream_next_json_object_value(F("Load"), String( 100 - (100 * loopCounterLast / loopCounterMax) ));
@@ -3763,7 +3760,9 @@ void handle_advanced() {
   String baudrate = WebServer.arg(F("baudrate"));
   String usentp = WebServer.arg(F("usentp"));
   String wdi2caddress = WebServer.arg(F("wdi2caddress"));
-  String usessdp = WebServer.arg(F("usessdp"));
+  #if defined(ESP8266_FAT)
+    String usessdp = WebServer.arg(F("usessdp"));
+  #endif
   String edit = WebServer.arg(F("edit"));
   String wireclockstretchlimit = WebServer.arg(F("wireclockstretchlimit"));
   String userules = WebServer.arg(F("userules"));
@@ -3798,7 +3797,9 @@ void handle_advanced() {
     Settings.UseNTP = (usentp == F("on"));
     Settings.DST = (dst == F("on"));
     Settings.WDI2CAddress = wdi2caddress.toInt();
-    Settings.UseSSDP = (usessdp == F("on"));
+    #if defined(ESP8266_FAT)
+      Settings.UseSSDP = (usessdp == F("on"));
+    #endif
     Settings.WireClockStretchLimit = wireclockstretchlimit.toInt();
     Settings.UseRules = (userules == F("on"));
     Settings.ConnectionFailuresThreshold = cft.toInt();
@@ -3873,7 +3874,9 @@ void handle_advanced() {
   addFormNumericBox(F("WD I2C Address"), F("wdi2caddress"), Settings.WDI2CAddress, 0, 127);
   TXBuffer += F(" (decimal)");
 
-  addFormCheckBox(F("Use SSDP"), F("usessdp"), Settings.UseSSDP);
+  #if defined(ESP8266_FAT)
+    addFormCheckBox(F("Use SSDP"), F("usessdp"), Settings.UseSSDP);
+  #endif
 
   addFormNumericBox(F("Connection Failure Threshold"), F("cft"), Settings.ConnectionFailuresThreshold, 0, 100);
 
@@ -4946,7 +4949,9 @@ void handle_sysinfo() {
 
    addCopyButton(F("copyText"), F("\\n"), F("Copy info to clipboard") );
 
-   TXBuffer += githublogo;
+   #if defined(ESP8266_FAT)
+     TXBuffer += githublogo;
+   #endif
 
    TXBuffer += F("<TR><TD>Unit<TD>");
    TXBuffer += Settings.Unit;
@@ -5272,8 +5277,10 @@ String getValueSymbol(byte index)
   return ret;
 }
 
-
+//if defined(ESP8266_FAT)
 void handle_favicon() {
-  checkRAM(F("handle_favicon"));
-  WebServer.send_P(200, PSTR("image/x-icon"), favicon_8b_ico, favicon_8b_ico_len);
+  WebServer.send(200, F("text/html"), F("o"));
+//  checkRAM(F("handle_favicon"));
+//  WebServer.send_P(200, PSTR("image/x-icon"), favicon_8b_ico, favicon_8b_ico_len);
 }
+//endif

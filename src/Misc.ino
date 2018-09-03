@@ -40,6 +40,7 @@ bool isDeepSleepEnabled()
   return true;
 }
 
+#if defined(ESP8266_FAT)
 bool readyForSleep()
 {
   if (!isDeepSleepEnabled())
@@ -99,6 +100,7 @@ void deepSleepStart(int delay)
     esp_deep_sleep_start();
   #endif
 }
+#endif
 
 boolean remoteConfig(struct EventStruct *event, String& string)
 {
@@ -1474,6 +1476,12 @@ bool SerialAvailableForWrite() {
     if (!Serial.availableForWrite()) return false; // UART FIFO overflow or TX disabled.
   #endif
   return true;
+}
+
+void disableSerialLog() {
+  log_to_serial_disabled = true;
+  //setLogLevelFor(LOG_TO_SERIAL, 0);
+  Settings.SerialLogLevel = 0;
 }
 
 boolean loglevelActiveFor(byte destination, byte logLevel) {
@@ -3007,6 +3015,7 @@ void checkRAM( String &a ) {
 
 #define isdigit(n) (n >= '0' && n <= '9')
 
+#if defined(ESP8266_FAT)
 /********************************************************************************************\
   Generate a tone of specified frequency on pin
   \*********************************************************************************************/
@@ -3182,7 +3191,7 @@ void play_rtttl(uint8_t _pin, const char *p )
 }
 
 //#endif
-
+#endif
 
 #ifdef FEATURE_ARDUINO_OTA
 /********************************************************************************************\

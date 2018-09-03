@@ -276,7 +276,7 @@ void sendSysInfoUDP(byte repeats)
   }
 }
 
-#if defined(ESP8266)
+#if defined(ESP8266_FAT)
 /********************************************************************************************\
   Respond to HTTP XML requests for SSDP information
   \*********************************************************************************************/
