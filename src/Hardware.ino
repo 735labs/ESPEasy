@@ -42,18 +42,18 @@ void hardwareInit()
         addLog(LOG_LEVEL_INFO, log);
         #if defined(ESP8266)
           Wire.setClockStretchLimit(Settings.WireClockStretchLimit);
-        #endif        
+        #endif
       }
   }
 
   // I2C Watchdog boot status check
-  if (Settings.WDI2CAddress != 0)
+  if (Settings.WDI2CAddress > 0)
   {
     delay(500);
     Wire.beginTransmission(Settings.WDI2CAddress);
     Wire.write(0x83);             // command to set pointer
     Wire.write(17);               // pointer value to status byte
-    Wire.endTransmission();
+    Wire.endTransmission(false);
 
     Wire.requestFrom(Settings.WDI2CAddress, (uint8_t)1);
     if (Wire.available())

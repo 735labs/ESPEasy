@@ -1,4 +1,4 @@
-#define _735LABS
+//#define _735LABS
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
 
@@ -71,10 +71,10 @@
   #define USE_RTOS_MULTITASKING
 #endif
 
-#define DEFAULT_USE_RULES                       false   // (true|false) Enable Rules?
+#define DEFAULT_USE_RULES                       true   // (true|false) Enable Rules?
 
-#define DEFAULT_MQTT_RETAIN                     false   // (true|false) Retain MQTT messages?
-#define DEFAULT_MQTT_DELAY                      1000    // Time in milliseconds to retain MQTT messages
+#define DEFAULT_MQTT_RETAIN                     true   // (true|false) Retain MQTT messages?
+#define DEFAULT_MQTT_DELAY                      177    // Time in milliseconds to retain MQTT messages
 #define DEFAULT_MQTT_LWT_TOPIC                  ""      // Default lwt topic
 #define DEFAULT_MQTT_LWT_CONNECT_MESSAGE        "Connected" // Default lwt message
 #define DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE     "Connection Lost" // Default lwt message
@@ -90,9 +90,9 @@
 #define LOG_TO_WEBLOG         3
 #define LOG_TO_SDCARD         4
 #define DEFAULT_SYSLOG_IP                       ""                      // Syslog IP Address
-#define DEFAULT_SYSLOG_LEVEL            0                               // Syslog Log Level
+#define DEFAULT_SYSLOG_LEVEL            LOG_LEVEL_INFO                  // Syslog Log Level
 #define DEFAULT_SERIAL_LOG_LEVEL        0                               // Serial Log Level
-#define DEFAULT_WEB_LOG_LEVEL           LOG_LEVEL_INFO                  // Web Log Level
+#define DEFAULT_WEB_LOG_LEVEL           0                               // Web Log Level
 #define DEFAULT_SD_LOG_LEVEL            0                               // SD Card Log Level
 #define DEFAULT_USE_SD_LOG                      false                   // (true|false) Enable Logging to the SD card
 
@@ -148,7 +148,7 @@
 //(512k is NOT finsihed or tested yet as of v2.0.0-dev6)
 
 //build all the normal stable plugins (on by default)
-#define PLUGIN_BUILD_NORMAL
+//#define PLUGIN_BUILD_NORMAL
 
 //build all plugins that are in test stadium
 //#define PLUGIN_BUILD_TESTING
@@ -183,7 +183,7 @@
 #define BUILD_GIT "(custom)"
 #endif
 
-#define MAX_FLASHWRITES_PER_DAY           100 // per 24 hour window
+#define MAX_FLASHWRITES_PER_DAY           150 // per 24 hour window
 
 #define NODE_TYPE_ID_ESP_EASY_STD           1
 #define NODE_TYPE_ID_ESP_EASYM_STD         17
@@ -273,8 +273,8 @@
   #define TASKS_MAX                          32
 #endif
 
-#define CONTROLLER_MAX                      3 // max 4!
-#define NOTIFICATION_MAX                    3 // max 4!
+#define CONTROLLER_MAX                      2 // max 4!
+#define NOTIFICATION_MAX                    2 // max 4!
 #define VARS_PER_TASK                       4
 #define PLUGIN_MAX                DEVICES_MAX
 #define PLUGIN_CONFIGVAR_MAX                8
@@ -427,7 +427,7 @@
 #if defined(ESP32)
 
   // Temp fix for a missing core_version.h within ESP Arduino core. Wait until they actually have different releases
-  #define ARDUINO_ESP8266_RELEASE "2_4_0"
+  #define ARDUINO_ESP8266_RELEASE "2_4_1"
 
   #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASY32_STD
   #define ICACHE_RAM_ATTR IRAM_ATTR
@@ -503,12 +503,16 @@ int mqtt_reconnect_count = 0;
 WiFiUDP portUDP;
 
 struct CRCStruct{
+#if defined(ESP8266_FAT)
   char compileTimeMD5[16+32+1]= "MD5_MD5_MD5_MD5_BoundariesOfTheSegmentsGoHere...";
   char binaryFilename[32+32+1]= "ThisIsTheDummyPlaceHolderForTheBinaryFilename64ByteLongFilenames";
+#endif
   char compileTime[16]= __TIME__;
   char compileDate[16]= __DATE__;
+#if defined(ESP8266_FAT)
   uint8_t runTimeMD5[16]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
   bool checkPassed (void){ return memcmp(compileTimeMD5,runTimeMD5,16)==0 ; }
+#endif
   uint32_t numberOfCRCBytes=0;
 }CRCValues;
 
@@ -635,8 +639,10 @@ struct SecurityStruct
   byte          IPblockLevel;
 
   //its safe to extend this struct, up to 4096 bytes, default values in config are 0. Make sure crc is last
+#if defined(ESP8266_FAT)
   uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
   uint8_t       md5[16];
+#endif
 } SecuritySettings;
 
 struct SettingsStruct
@@ -647,9 +653,9 @@ struct SettingsStruct
     UDPPort(0), SyslogLevel(0), SerialLogLevel(0), WebLogLevel(0), SDLogLevel(0),
     BaudRate(0), MessageDelay(0), deepSleep(0),
     CustomCSS(false), DST(false), WDI2CAddress(0),
-    UseRules(false), UseSerial(false), UseSSDP(false), UseNTP(false),
+    UseRules(true), UseSerial(false), UseSSDP(false), UseNTP(false),
     WireClockStretchLimit(0), GlobalSync(false), ConnectionFailuresThreshold(0),
-    TimeZone(0), MQTTRetainFlag(false), InitSPI(false),
+    TimeZone(0), MQTTRetainFlag(true), InitSPI(false),
     Pin_status_led_Inversed(false), deepSleepOnFail(false), UseValueLogger(false),
     DST_Start(0), DST_End(0), UseRTOSMultitasking(false), Pin_Reset(-1),
     SyslogFacility(DEFAULT_SYSLOG_FACILITY), StructSize(0), MQTTUseUnitNameAsClientId(0)

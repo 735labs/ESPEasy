@@ -409,7 +409,9 @@ void WebServerInit()
   WebServer.on(F("/controllers"), handle_controllers);
   WebServer.on(F("/hardware"), handle_hardware);
   WebServer.on(F("/devices"), handle_devices);
+#if defined(ESP8266_FAT)
   WebServer.on(F("/notifications"), handle_notifications);
+#endif
   WebServer.on(F("/log"), handle_log);
   WebServer.on(F("/logjson"), handle_log_JSON);
   WebServer.on(F("/tools"), handle_tools);
@@ -607,17 +609,23 @@ void getWebPageTemplateVar(const String& varName )
       F("Hardware"), F("hardware"),           //3
       F("Devices"), F("devices"),             //4
       F("Rules"), F("rules"),                 //5
+#if defined(ESP8266_FAT)
       F("Notifications"), F("notifications"), //6
-      F("Tools"), F("tools"),                 //7
+#endif
+      F("Tools"), F("tools"),                 //7/6
     };
 
     TXBuffer += F("<div class='menubar'>");
 
+#if defined(ESP8266_FAT)
     for (byte i = 0; i < 8; i++)
     {
       if (i == 5 && !Settings.UseRules)   //hide rules menu item
         continue;
-
+#else
+    for (byte i = 0; i < 7; i++)
+    {
+#endif
       TXBuffer += F("<a class='menu");
       if (i == navMenuIndex)
         TXBuffer += F(" active");
@@ -664,6 +672,7 @@ void getWebPageTemplateVar(const String& varName )
                   "\n//--></script>");
   }
 
+#if defined(ESP8266_FAT)
   else if (varName == F("error"))
   {
     //print last error - not implemented yet
@@ -673,7 +682,7 @@ void getWebPageTemplateVar(const String& varName )
   {
     //print debug messages - not implemented yet
   }
-
+#endif
   else
   {
     String log = F("Templ: Unknown Var : ");
@@ -766,13 +775,13 @@ void handle_root() {
     TXBuffer += F("<form>");
     TXBuffer += F("<table class='normal'><TH style='width:150px;' align='left'>System Info<TH align='left'>Value");
 
-    TXBuffer += F("<TR><TD>Unit:<TD>");
+    TXBuffer += F("<TR><TD>Unit<TD>");
     TXBuffer += String(Settings.Unit);
 
-    TXBuffer += F("<TR><TD>GIT version:<TD>");
+    TXBuffer += F("<TR><TD>GIT version<TD>");
     TXBuffer += BUILD_GIT;
 
-    TXBuffer += F("<TR><TD>Local Time:<TD>");
+    TXBuffer += F("<TR><TD>Local Time<TD>");
     if (Settings.UseNTP)
     {
       TXBuffer += getDateTimeString('-', ':', ' ');
@@ -780,7 +789,7 @@ void handle_root() {
     else
       TXBuffer += F("<font color='red'>NTP disabled</font>");
 
-    TXBuffer += F("<TR><TD>Uptime:<TD>");
+    TXBuffer += F("<TR><TD>Uptime<TD>");
     char strUpTime[40];
     int minutes = wdcounter / 2;
     int days = minutes / 1440;
@@ -790,7 +799,7 @@ void handle_root() {
     sprintf_P(strUpTime, PSTR("%d days %d hours %d minutes"), days, hrs, minutes);
     TXBuffer += strUpTime;
 
-    TXBuffer += F("<TR><TD>Load:<TD>");
+    TXBuffer += F("<TR><TD>Load<TD>");
     if (wdcounter > 0)
     {
       TXBuffer += String(100 - (100 * loopCounterLast / loopCounterMax));
@@ -799,7 +808,7 @@ void handle_root() {
       TXBuffer += F(")");
     }
 
-    TXBuffer += F("<TR><TD>Free Mem:<TD>");
+    TXBuffer += F("<TR><TD>Free Mem<TD>");
     TXBuffer += String(freeMem);
     TXBuffer += F(" (");
     TXBuffer += String(lowestRAM);
@@ -807,18 +816,23 @@ void handle_root() {
     TXBuffer += String(lowestRAMfunction);
     TXBuffer += F(")");
 
-    TXBuffer += F("<TR><TD>IP:<TD>");
+    TXBuffer += F("<TR><TD>IP<TD>");
     TXBuffer += formatIP(ip);
 
-    TXBuffer += F("<TR><TD>Wifi RSSI:<TD>");
+    TXBuffer += F("<TR><TD>Wifi RSSI<TD>");
     if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED)
     {
       TXBuffer += String(WiFi.RSSI());
       TXBuffer += F(" dB");
     }
 
+    TXBuffer += F("<TR><TD>WiFi's reconnects<TD>");
+    TXBuffer += wifi_reconnects;
+    TXBuffer += F("<TR><TD>Ctrl's conn. fails<TD>");
+    TXBuffer += connectionFailures;
+
     #ifdef FEATURE_MDNS
-      TXBuffer += F("<TR><TD>mDNS:<TD><a href='http://");
+      TXBuffer += F("<TR><TD>mDNS<TD><a href='http://");
       TXBuffer += WifiGetHostname();
       TXBuffer += F(".local'>");
       TXBuffer += WifiGetHostname();
@@ -827,7 +841,7 @@ void handle_root() {
     TXBuffer += F("<TR><TD><TD>");
     addButton(F("sysinfo"), F("More info"));
 
-    TXBuffer += F("</table><BR><BR><table class='multirow'><TR><TH>Node List:<TH>Name<TH>Build<TH>Type<TH>IP<TH>Age");
+    TXBuffer += F("</table><BR><BR><table class='multirow'><TR><TH>Node List<TH>Name<TH>Build<TH>Type<TH>IP<TH>Age");
     for (byte x = 0; x < UNIT_MAX; x++)
     {
       if (Nodes[x].ip[0] != 0)
@@ -1228,7 +1242,7 @@ void handle_controllers() {
   else
   {
     TXBuffer += F("<table class='normal'><TR><TH style='width:150px;' align='left'>Controller Settings<TH>");
-    TXBuffer += F("<TR><TD>Protocol:");
+    TXBuffer += F("<TR><TD>Protocol");
     byte choice = Settings.Protocol[controllerindex];
     TXBuffer += F("<TD>");
     addSelector_Head(F("protocol"), true);
@@ -1363,6 +1377,7 @@ void handle_controllers() {
 //********************************************************************************
 // Web Interface notifcations page
 //********************************************************************************
+#if defined(ESP8266_FAT)
 void handle_notifications() {
   checkRAM(F("handle_notifications"));
   if (!isLoggedIn()) return;
@@ -1481,7 +1496,7 @@ void handle_notifications() {
   else
   {
     TXBuffer += F("<table class='normal'><TR><TH style='width:150px;' align='left'>Notification Settings<TH>");
-    TXBuffer += F("<TR><TD>Notification:");
+    TXBuffer += F("<TR><TD>Notification");
     byte choice = Settings.Notification[notificationindex];
     TXBuffer += F("<TD>");
     addSelector_Head(F("notification"), true);
@@ -1514,50 +1529,50 @@ void handle_notifications() {
 
         if (Notification[NotificationProtocolIndex].usesMessaging)
         {
-          TXBuffer += F("<TR><TD>Domain:<TD><input class='wide' type='text' name='domain' size=64 value='");
+          TXBuffer += F("<TR><TD>Domain<TD><input class='wide' type='text' name='domain' size=64 value='");
           TXBuffer += NotificationSettings.Domain;
           TXBuffer += F("'>");
 
-          TXBuffer += F("<TR><TD>Server:<TD><input class='wide' type='text' name='server' size=64 value='");
+          TXBuffer += F("<TR><TD>Server<TD><input class='wide' type='text' name='server' size=64 value='");
           TXBuffer += NotificationSettings.Server;
           TXBuffer += F("'>");
 
-          TXBuffer += F("<TR><TD>Port:<TD><input class='wide' type='text' name='port' value='");
+          TXBuffer += F("<TR><TD>Port<TD><input class='wide' type='text' name='port' value='");
           TXBuffer += NotificationSettings.Port;
           TXBuffer += F("'>");
 
-          TXBuffer += F("<TR><TD>Sender:<TD><input class='wide' type='text' name='sender' size=64 value='");
+          TXBuffer += F("<TR><TD>Sender<TD><input class='wide' type='text' name='sender' size=64 value='");
           TXBuffer += NotificationSettings.Sender;
           TXBuffer += F("'>");
 
-          TXBuffer += F("<TR><TD>Receiver:<TD><input class='wide' type='text' name='receiver' size=64 value='");
+          TXBuffer += F("<TR><TD>Receiver<TD><input class='wide' type='text' name='receiver' size=64 value='");
           TXBuffer += NotificationSettings.Receiver;
           TXBuffer += F("'>");
 
-          TXBuffer += F("<TR><TD>Subject:<TD><input class='wide' type='text' name='subject' size=64 value='");
+          TXBuffer += F("<TR><TD>Subject<TD><input class='wide' type='text' name='subject' size=64 value='");
           TXBuffer += NotificationSettings.Subject;
           TXBuffer += F("'>");
 
-          TXBuffer += F("<TR><TD>User:<TD><input class='wide' type='text' name='user' size=48 value='");
+          TXBuffer += F("<TR><TD>User<TD><input class='wide' type='text' name='user' size=48 value='");
           TXBuffer += NotificationSettings.User;
           TXBuffer += F("'>");
 
-          TXBuffer += F("<TR><TD>Pass:<TD><input class='wide' type='text' name='pass' size=32 value='");
+          TXBuffer += F("<TR><TD>Pass<TD><input class='wide' type='text' name='pass' size=32 value='");
           TXBuffer += NotificationSettings.Pass;
           TXBuffer += F("'>");
 
-          TXBuffer += F("<TR><TD>Body:<TD><textarea name='body' rows='20' size=512 wrap='off'>");
+          TXBuffer += F("<TR><TD>Body<TD><textarea name='body' rows='20' size=512 wrap='off'>");
           TXBuffer += NotificationSettings.Body;
           TXBuffer += F("</textarea>");
         }
 
         if (Notification[NotificationProtocolIndex].usesGPIO > 0)
         {
-          TXBuffer += F("<TR><TD>1st GPIO:<TD>");
+          TXBuffer += F("<TR><TD>1st GPIO<TD>");
           addPinSelect(false, "pin1", NotificationSettings.Pin1);
         }
 
-        TXBuffer += F("<TR><TD>Enabled:<TD>");
+        TXBuffer += F("<TR><TD>Enabled<TD>");
         addCheckBox(F("notificationenabled"), Settings.NotificationEnabled[notificationindex]);
 
         TempEvent.NotificationIndex = notificationindex;
@@ -1575,7 +1590,7 @@ void handle_notifications() {
   sendHeadandTail(F("TmplStd"),_TAIL);
   TXBuffer.endStream();
 }
-
+#endif
 
 //********************************************************************************
 // Web Interface hardware page
@@ -2061,7 +2076,7 @@ void handle_devices() {
     addFormHeader(F("Task Settings"));
 
 
-    TXBuffer += F("<TR><TD style='width:150px;' align='left'>Device:<TD>");
+    TXBuffer += F("<TR><TD style='width:150px;' align='left'>Device<TD>");
 
     //no device selected
     if (Settings.TaskDeviceNumber[taskIndex] == 0 )
@@ -2160,7 +2175,7 @@ void handle_devices() {
             byte ProtocolIndex = getProtocolIndex(Settings.Protocol[controllerNr]);
             if (Protocol[ProtocolIndex].usesID && Settings.Protocol[controllerNr] != 0)
             {
-              TXBuffer += F("<TR><TD>IDX:<TD>");
+              TXBuffer += F("<TR><TD>IDX<TD>");
               id = F("TDID");   //="taskdeviceid"
               id += controllerNr + 1;
               addNumericBox(id, Settings.TaskDeviceID[controllerNr][taskIndex], 0, 9999);
@@ -2250,7 +2265,7 @@ void handle_devices() {
 
 
   checkRAM(F("handle_devices"));
-  String log = F("DEBUG: String size:");
+  String log = F("DEBUG: String size");
   log += String(TXBuffer.sentBytes);
   addLog(LOG_LEVEL_DEBUG_DEV, log);
   sendHeadandTail(F("TmplStd"),_TAIL);
@@ -2624,7 +2639,7 @@ void addRowLabel(const String& label)
 {
   TXBuffer += F("<TR><TD>");
   TXBuffer += label;
-  TXBuffer += F(":<TD>");
+  TXBuffer += F("<TD>");
 }
 
 void addButton(const String &url, const String &label)
@@ -3045,7 +3060,11 @@ void handle_log_JSON() {
 //********************************************************************************
 void handle_tools() {
   if (!isLoggedIn()) return;
+#if defined(ESP8266_FAT)
   navMenuIndex = 7;
+#else
+  navMenuIndex = 6;
+#endif
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd"),_HEAD);
 
@@ -3640,11 +3659,13 @@ void handle_json()
       stream_next_json_object_value(F("Connected msec"), String(timeDiff(lastConnectMoment, millis())));
       stream_next_json_object_value(F("Last Disconnect Reason"), String(lastDisconnectReason));
       stream_next_json_object_value(F("Last Disconnect Reason str"), getLastDisconnectReason());
-      stream_next_json_object_value(F("Number reconnects"), String(wifi_reconnects));
+      stream_next_json_object_value(F("Wifi reconnects"), String(wifi_reconnects));
+      stream_next_json_object_value(F("Ctrl conn fails"), String(connectionFailures));
       stream_last_json_object_value(F("RSSI"), String(WiFi.RSSI()));
       TXBuffer += F(",\n");
     }
   }
+
 
   byte taskNr = tasknr.toInt();
   byte firstTaskIndex = 0;
@@ -3760,12 +3781,14 @@ void handle_advanced() {
   String baudrate = WebServer.arg(F("baudrate"));
   String usentp = WebServer.arg(F("usentp"));
   String wdi2caddress = WebServer.arg(F("wdi2caddress"));
-  #if defined(ESP8266_FAT)
-    String usessdp = WebServer.arg(F("usessdp"));
-  #endif
+#if defined(ESP8266_FAT)
+  String usessdp = WebServer.arg(F("usessdp"));
+#endif
   String edit = WebServer.arg(F("edit"));
   String wireclockstretchlimit = WebServer.arg(F("wireclockstretchlimit"));
+#if defined(ESP8266_FAT)
   String userules = WebServer.arg(F("userules"));
+#endif
   String cft = WebServer.arg(F("cft"));
   String MQTTRetainFlag = WebServer.arg(F("mqttretainflag"));
   String ArduinoOTAEnable = WebServer.arg(F("arduinootaenable"));
@@ -3797,11 +3820,11 @@ void handle_advanced() {
     Settings.UseNTP = (usentp == F("on"));
     Settings.DST = (dst == F("on"));
     Settings.WDI2CAddress = wdi2caddress.toInt();
-    #if defined(ESP8266_FAT)
-      Settings.UseSSDP = (usessdp == F("on"));
-    #endif
     Settings.WireClockStretchLimit = wireclockstretchlimit.toInt();
+#if defined(ESP8266_FAT)
+    Settings.UseSSDP = (usessdp == F("on"));
     Settings.UseRules = (userules == F("on"));
+#endif
     Settings.ConnectionFailuresThreshold = cft.toInt();
     Settings.MQTTRetainFlag = (MQTTRetainFlag ==  F("on"));
     Settings.ArduinoOTAEnable = (ArduinoOTAEnable ==  F("on"));
@@ -3819,7 +3842,9 @@ void handle_advanced() {
 
   addFormHeader(F("Advanced Settings"));
 
+#if defined(ESP8266_FAT)
   addFormCheckBox(F("Rules"), F("userules"), Settings.UseRules);
+#endif
 
   addFormSubHeader(F("Controller Settings"));
 
@@ -3874,9 +3899,9 @@ void handle_advanced() {
   addFormNumericBox(F("WD I2C Address"), F("wdi2caddress"), Settings.WDI2CAddress, 0, 127);
   TXBuffer += F(" (decimal)");
 
-  #if defined(ESP8266_FAT)
-    addFormCheckBox(F("Use SSDP"), F("usessdp"), Settings.UseSSDP);
-  #endif
+#if defined(ESP8266_FAT)
+  addFormCheckBox(F("Use SSDP"), F("usessdp"), Settings.UseSSDP);
+#endif
 
   addFormNumericBox(F("Connection Failure Threshold"), F("cft"), Settings.ConnectionFailuresThreshold, 0, 100);
 
@@ -4029,7 +4054,7 @@ void handle_upload() {
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd"));
 
-  TXBuffer += F("<form enctype='multipart/form-data' method='post'><p>Upload settings file:<br><input type='file' name='datafile' size='40'></p><div><input class='button link' type='submit' value='Upload'></div><input type='hidden' name='edit' value='1'></form>");
+  TXBuffer += F("<form enctype='multipart/form-data' method='post'><p>Upload settings file<br><input type='file' name='datafile' size='40'></p><div><input class='button link' type='submit' value='Upload'></div><input type='hidden' name='edit' value='1'></form>");
   sendHeadandTail(F("TmplStd"),true);
   TXBuffer.endStream();
   printWebString = "";
@@ -4717,14 +4742,14 @@ void handle_setup() {
       TXBuffer += F("</table>");
     }
 
-    TXBuffer += F("<BR><label class='container2'>other SSID:<input type='radio' name='ssid' id='other_ssid' value='other' ><span class='dotmark'></span></label>");
+    TXBuffer += F("<BR><label class='container2'>other SSID<input type='radio' name='ssid' id='other_ssid' value='other' ><span class='dotmark'></span></label>");
     TXBuffer += F("<input class='wide' type ='text' name='other' value='");
     TXBuffer += other;
     TXBuffer += F("'><BR><BR>");
 
     addFormSeparator (2);
 
-    TXBuffer += F("<BR>Password:<BR><input class='wide' type ='text' name='pass' value='");
+    TXBuffer += F("<BR>Password<BR><input class='wide' type ='text' name='pass' value='");
     TXBuffer += password;
     TXBuffer += F("'><BR><BR>");
 
@@ -4856,7 +4881,7 @@ void handle_rules() {
     }
     addLog(LOG_LEVEL_INFO, log);
 
-    log = F(" Webserver args:");
+    log = F(" Webserver args");
     for (int i = 0; i < WebServer.args(); ++i) {
       log += F(" ");
       log += i;
@@ -5054,7 +5079,7 @@ void handle_sysinfo() {
   TXBuffer += F("<TR><TD>Allowed IP Range<TD>");
   TXBuffer += describeAllowedIPrange();
 
-  TXBuffer += F("<TR><TD>Serial Port available:<TD>");
+  TXBuffer += F("<TR><TD>Serial Port available<TD>");
   TXBuffer += String(SerialAvailableForWrite());
   TXBuffer += F(" (");
   #if defined(ESP8266)
@@ -5092,8 +5117,12 @@ void handle_sysinfo() {
   TXBuffer += F("<TR><TD>Last Disconnect Reason<TD>");
   TXBuffer += getLastDisconnectReason();
 
-  TXBuffer += F("<TR><TD>Number reconnects<TD>");
+  TXBuffer += F("<TR><TD>WiFi's reconnects<TD>");
   TXBuffer += wifi_reconnects;
+  TXBuffer += F("<TR><TD>Ctrl's conn. fails<TD>");
+  TXBuffer += connectionFailures;
+//  TXBuffer += F("<TR><TD>Number reconnects<TD>");
+//  TXBuffer += wifi_reconnects;
 
   TXBuffer += F("<TR><TD colspan=2><H3>Firmware</H3></TD></TR>");
 
@@ -5112,6 +5141,7 @@ void handle_sysinfo() {
   TXBuffer += deviceCount + 1;
   TXBuffer += getPluginDescriptionString();
 
+#if defined(ESP8266_FAT)
   TXBuffer += F("<TR><TD>Build Md5<TD>");
   for (byte i = 0; i<16; i++)    TXBuffer += String(CRCValues.compileTimeMD5[i],HEX);
 
@@ -5119,15 +5149,17 @@ void handle_sysinfo() {
   if (! CRCValues.checkPassed())
      TXBuffer += F("<font color = 'red'>fail !</font>");
   else  TXBuffer += F("passed.");
+#endif
 
    TXBuffer += F("<TR><TD id='copyText_9'>Build time<TD id='copyText_10'>");
    TXBuffer += String(CRCValues.compileDate);
    TXBuffer += " ";
    TXBuffer += String(CRCValues.compileTime);
 
+#if defined(ESP8266_FAT)
    TXBuffer += F("<TR><TD id='copyText_11'>Binary filename<TD id='copyText_12'>");
    TXBuffer += String(CRCValues.binaryFilename);
-
+#endif
    TXBuffer += F("<TR><TD colspan=2><H3>ESP board</H3></TD></TR>");
 
    TXBuffer += F("<TR><TD>ESP Chip ID<TD>");
@@ -5139,7 +5171,7 @@ void handle_sysinfo() {
      TXBuffer += espChipId;
      TXBuffer += F(")");
 
-     TXBuffer += F("<TR><TD>ESP Chip Freq:<TD>");
+     TXBuffer += F("<TR><TD>ESP Chip Freq<TD>");
      TXBuffer += ESP.getCpuFreqMHz();
      TXBuffer += F(" MHz");
   #endif
@@ -5156,7 +5188,7 @@ void handle_sysinfo() {
      TXBuffer += espChipIdS1;
      TXBuffer += F(")");
 
-     TXBuffer += F("<TR><TD>ESP Chip Freq:<TD>");
+     TXBuffer += F("<TR><TD>ESP Chip Freq<TD>");
      TXBuffer += ESP.getCpuFreqMHz();
      TXBuffer += F(" MHz");
   #endif
@@ -5189,22 +5221,22 @@ void handle_sysinfo() {
   #endif
   uint32_t ideSize = ESP.getFlashChipSize();
 
-   TXBuffer += F("<TR><TD>Flash Chip Real Size:<TD>");
+   TXBuffer += F("<TR><TD>Flash Chip Real Size<TD>");
    TXBuffer += realSize / 1024;
    TXBuffer += F(" kB");
 
-   TXBuffer += F("<TR><TD>Flash IDE Size:<TD>");
+   TXBuffer += F("<TR><TD>Flash IDE Size<TD>");
    TXBuffer += ideSize / 1024;
    TXBuffer += F(" kB");
 
   // Please check what is supported for the ESP32
-  #if defined(ESP8266)
-     TXBuffer += F("<TR><TD>Flash IDE speed:<TD>");
+  #if defined(ESP8266_FAT)
+     TXBuffer += F("<TR><TD>Flash IDE speed<TD>");
      TXBuffer += ESP.getFlashChipSpeed() / 1000000;
      TXBuffer += F(" MHz");
 
     FlashMode_t ideMode = ESP.getFlashChipMode();
-     TXBuffer += F("<TR><TD>Flash IDE mode:<TD>");
+     TXBuffer += F("<TR><TD>Flash IDE mode<TD>");
     switch (ideMode) {
       case FM_QIO:   TXBuffer += F("QIO");  break;
       case FM_QOUT:  TXBuffer += F("QOUT"); break;

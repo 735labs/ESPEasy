@@ -123,8 +123,8 @@ boolean Plugin_004(byte function, struct EventStruct * event, String& string)
             for (byte x = 0; x < 8; x++)
             {
                 if (x != 0)
-                    string += "-";
-                // string += String(ExtraTaskSettings.TaskDevicePluginConfigLong[x], HEX);
+                //    string += "-";
+                  string += String(ExtraTaskSettings.TaskDevicePluginConfigLong[x], HEX);
             }
             success = true;
             break;

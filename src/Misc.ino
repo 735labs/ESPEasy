@@ -3,7 +3,7 @@
 // this feature is not in all upstream versions yet.
 // See https://github.com/esp8266/Arduino/issues/1923
 // and https://github.com/letscontrolit/ESPEasy/issues/253
-#if defined(ESP8266)
+#if defined(ESP8266_FAT)
   #include <md5.h>
 #endif
 #if defined(ESP8266)
@@ -464,6 +464,7 @@ String FileError(int line, const char * fname)
 /********************************************************************************************\
   Fix stuff to clear out differences between releases
   \*********************************************************************************************/
+#if defined(ESP8266_FAT)
 String BuildFixes()
 {
   checkRAM(F("BuildFixes"));
@@ -504,7 +505,7 @@ String BuildFixes()
   Settings.Build = BUILD;
   return(SaveSettings());
 }
-
+#endif
 
 /********************************************************************************************\
   Mount FS and check config.dat
@@ -670,6 +671,7 @@ void dump (uint32_t addr) { //Seems already included in core 2.4 ...
 }
 #endif
 
+#if defined(ESP8266_FAT)
 uint32_t progMemMD5check(){
     checkRAM(F("progMemMD5check"));
     #define BufSize 10
@@ -703,7 +705,7 @@ uint32_t progMemMD5check(){
    addLog(LOG_LEVEL_INFO,    F("CRC  : program checksum       ...FAIL"));
    return 0;
 }
-
+#endif
 
 
 /********************************************************************************************\
@@ -712,8 +714,10 @@ uint32_t progMemMD5check(){
 String SaveSettings(void)
 {
   checkRAM(F("SaveSettings"));
+#if defined(ESP8266_FAT)
   MD5Builder md5;
   uint8_t tmp_md5[16] = {0};
+#endif
   String err;
 
   Settings.StructSize = sizeof(struct SettingsStruct);
@@ -734,6 +738,7 @@ String SaveSettings(void)
      return(err);
 //  }
 
+#if defined(ESP8266_FAT)
   memcpy( SecuritySettings.ProgmemMd5, CRCValues.runTimeMD5, 16);
   md5.begin();
   md5.add((uint8_t *)&SecuritySettings, sizeof(SecuritySettings)-16);
@@ -742,12 +747,15 @@ String SaveSettings(void)
   if (memcmp(tmp_md5, SecuritySettings.md5, 16) != 0) {
     // Settings have changed, save to file.
     memcpy(SecuritySettings.md5, tmp_md5, 16);
+#endif
     err=SaveToFile((char*)FILE_SECURITY, 0, (byte*)&SecuritySettings, sizeof(SecuritySettings));
     if (WifiIsAP(WiFi.getMode())) {
       // Security settings are saved, may be update of WiFi settings or hostname.
       wifiSetupConnect = true;
     }
+#if defined(ESP8266_FAT)
   }
+#endif
   return (err);
 }
 
@@ -758,8 +766,10 @@ String LoadSettings()
 {
   checkRAM(F("LoadSettings"));
   String err;
+#if defined(ESP8266_FAT)
   uint8_t calculatedMd5[16];
   MD5Builder md5;
+#endif
 
   err=LoadFromFile((char*)FILE_CONFIG, 0, (byte*)&Settings, sizeof( SettingsStruct));
   if (err.length())
@@ -784,6 +794,7 @@ String LoadSettings()
 */
 
   err=LoadFromFile((char*)FILE_SECURITY, 0, (byte*)&SecuritySettings, sizeof( SecurityStruct));
+#if defined(ESP8266_FAT)
   md5.begin();
   md5.add((uint8_t *)&SecuritySettings, sizeof(SecuritySettings)-16);
   md5.calculate();
@@ -792,10 +803,12 @@ String LoadSettings()
     addLog(LOG_LEVEL_INFO, F("CRC  : SecuritySettings CRC   ...OK "));
     if (memcmp(SecuritySettings.ProgmemMd5,CRCValues.runTimeMD5, 16)!=0)
       addLog(LOG_LEVEL_INFO, F("CRC  : binary has changed since last save of Settings"));
- }
-  else{
+  }
+  else
+  {
     addLog(LOG_LEVEL_ERROR, F("CRC  : SecuritySettings CRC   ...FAIL"));
   }
+#endif
   setUseStaticIP(useStaticIP());
   return(err);
 }

@@ -48,7 +48,7 @@ uint8_t I2C_read8_reg(uint8_t i2caddr, byte reg, bool * is_ok) {
 
   Wire.beginTransmission(i2caddr);
   Wire.write((uint8_t)reg);
-  Wire.endTransmission();
+  Wire.endTransmission(false);
   byte count = Wire.requestFrom(i2caddr, (byte)1);
   if (is_ok != NULL) {
     *is_ok = (count == 1);
@@ -65,7 +65,7 @@ uint16_t I2C_read16_reg(uint8_t i2caddr, byte reg) {
 
   Wire.beginTransmission(i2caddr);
   Wire.write((uint8_t)reg);
-  Wire.endTransmission();
+  Wire.endTransmission(false);
   Wire.requestFrom(i2caddr, (byte)2);
   value = (Wire.read() << 8) | Wire.read();
 
@@ -80,7 +80,7 @@ int32_t I2C_read24_reg(uint8_t i2caddr, byte reg) {
 
   Wire.beginTransmission(i2caddr);
   Wire.write((uint8_t)reg);
-  Wire.endTransmission();
+  Wire.endTransmission(false);
   Wire.requestFrom(i2caddr, (byte)3);
   value = (((int32_t)Wire.read()) << 16) | (Wire.read() << 8) | Wire.read();
 

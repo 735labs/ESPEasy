@@ -55,7 +55,9 @@ Command commandStringToEnum(const char * cmd) {
     }
     case 'b': {
            if (strcmp_P(cmd_lc, PSTR("background")            ) == 0) return cmd_background;
+#if defined(ESP8266_FAT)
       else if (strcmp_P(cmd_lc, PSTR("blynkget")              ) == 0) return cmd_BlynkGet;
+#endif
       else if (strcmp_P(cmd_lc, PSTR("build")                 ) == 0) return cmd_build;
       break;
     }
@@ -68,9 +70,9 @@ Command commandStringToEnum(const char * cmd) {
     case 'd': {
            if (strcmp_P(cmd_lc, PSTR("debug")                 ) == 0) return cmd_Debug;
       else if (strcmp_P(cmd_lc, PSTR("delay")                 ) == 0) return cmd_Delay;
-      #if defined(ESP8266_FAT)
-        else if (strcmp_P(cmd_lc, PSTR("deepsleep")             ) == 0) return cmd_deepSleep;
-      #endif
+#if defined(ESP8266_FAT)
+      else if (strcmp_P(cmd_lc, PSTR("deepsleep")             ) == 0) return cmd_deepSleep;
+#endif
       else if (strcmp_P(cmd_lc, PSTR("dns")                   ) == 0) return cmd_DNS;
       else if (strcmp_P(cmd_lc, PSTR("dst")                   ) == 0) return cmd_DST;
       break;
@@ -105,7 +107,9 @@ Command commandStringToEnum(const char * cmd) {
     }
     case 'n': {
            if (strcmp_P(cmd_lc, PSTR("name")                  ) == 0) return cmd_Name;
+#if defined(ESP8266_FAT)
       else if (strcmp_P(cmd_lc, PSTR("notify")                ) == 0) return cmd_notify;
+#endif
       else if (strcmp_P(cmd_lc, PSTR("nosleep")               ) == 0) return cmd_NoSleep;
       else if (strcmp_P(cmd_lc, PSTR("ntphost")               ) == 0) return cmd_NTPHost;
       break;
@@ -120,13 +124,19 @@ Command commandStringToEnum(const char * cmd) {
       else if (strcmp_P(cmd_lc, PSTR("reset")                 ) == 0) return cmd_Reset;
       else if (strcmp_P(cmd_lc, PSTR("restart")               ) == 0) return cmd_Restart;
       else if (strcmp_P(cmd_lc, PSTR("resetflashwritecounter")) == 0) return cmd_resetFlashWriteCounter;
+#if defined(ESP8266_FAT)
       else if (strcmp_P(cmd_lc, PSTR("rules")                 ) == 0) return cmd_Rules;
+#endif
       break;
     }
     case 's': {
+#if defined(ESP8266_FAT)
            if (strcmp_P(cmd_lc, PSTR("sdcard")                ) == 0) return cmd_sdcard;
       else if (strcmp_P(cmd_lc, PSTR("sdremove")              ) == 0) return cmd_sdremove;
       else if (strcmp_P(cmd_lc, PSTR("sysload")               ) == 0) return cmd_sysload;
+#else
+           if (strcmp_P(cmd_lc, PSTR("sysload")               ) == 0) return cmd_sysload;
+#endif
       else if (strcmp_P(cmd_lc, PSTR("save")                  ) == 0) return cmd_Save;
       else if (strcmp_P(cmd_lc, PSTR("sendto")                ) == 0) return cmd_SendTo;
       else if (strcmp_P(cmd_lc, PSTR("sendtohttp")            ) == 0) return cmd_SendToHTTP;
@@ -237,6 +247,7 @@ void ExecuteCommand(byte source, const char *Line)
     break;
   }
 
+#if defined(ESP8266_FAT)
   case cmd_notify:
   {
     success = true;
@@ -260,6 +271,7 @@ void ExecuteCommand(byte source, const char *Line)
     }
     break;
   }
+#endif
 
   case cmd_resetFlashWriteCounter:
   {
@@ -279,7 +291,9 @@ void ExecuteCommand(byte source, const char *Line)
     }
     break;
   }
+
 #ifdef FEATURE_SD
+#if defined(ESP8266_FAT)
   case cmd_sdcard:
   {
     success = true;
@@ -300,6 +314,7 @@ void ExecuteCommand(byte source, const char *Line)
     SD.remove((char*)fname.c_str());
     break;
   }
+#endif
 #endif
 
   case cmd_lowmem:
@@ -524,7 +539,8 @@ void ExecuteCommand(byte source, const char *Line)
         //start new timer
         RulesTimer[Par1 - 1].interval = Par2*1000;
         RulesTimer[Par1 - 1].paused = false;
-        RulesTimer[Par1 - 1].timestamp = millis() + (1000 * Par2);
+        //RulesTimer[Par1 - 1].timestamp = millis() + (1000 * Par2);
+        setNextTimeInterval(RulesTimer[Par1 - 1].timestamp, (1000 * Par2));
       }
       else
       {
@@ -605,6 +621,9 @@ void ExecuteCommand(byte source, const char *Line)
     break;
   }
 
+
+
+#if defined(ESP8266_FAT)
   case cmd_Rules:
   {
     success = true;
@@ -614,6 +633,7 @@ void ExecuteCommand(byte source, const char *Line)
       Settings.UseRules = false;
     break;
   }
+#endif
 
   case cmd_Event:
   {
@@ -639,6 +659,7 @@ void ExecuteCommand(byte source, const char *Line)
     }
     break;
   }
+
   case cmd_Publish:
   {
     if (wifiStatus == ESPEASY_WIFI_SERVICES_INITIALIZED) {
@@ -731,6 +752,7 @@ void ExecuteCommand(byte source, const char *Line)
   // ****************************************
 
 #ifdef CPLUGIN_012
+#if defined(ESP8266_FAT)
   //FIXME: this should go to PLUGIN_WRITE in _C012.ino
   case cmd_BlynkGet:
   {
@@ -763,6 +785,7 @@ void ExecuteCommand(byte source, const char *Line)
     }
     break;
   }
+#endif
 #endif
 
   // ****************************************

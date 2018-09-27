@@ -93,21 +93,56 @@ To create/register a plugin, you have to :
     #undef DEFAULT_PIN_STATUS_LED
 
     #define PLUGIN_SET_ONLY_SWITCH
+
     // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
-    #define USES_P077	// CSE7766
+    #define USES_P077   // CSE7766
+
+    #define USES_P003   // Pulse
+    #define USES_P004   // Dallas
+    #define USES_P025   // ADS1115
+    #define USES_P026   // SysInfo
+    #define USES_P033   // Dummy
+    #define USES_P037   // MQTTImport
+
     #define DEFAULT_PIN_STATUS_LED 13 // GPIO13 Blue Led (0 = On, 1 = Off)
 #endif
 
 #ifdef PLUGIN_SET_BLITZWOLF_SHP2
     // Undef first to prevent compiler warnings
-//    #undef DEFAULT_PIN_STATUS_LED
+    #undef DEFAULT_PIN_STATUS_LED
 
     #define CONTROLLER_SET_ONLY_MQTT
     #define NOTIFIER_SET_NONE
     #define PLUGIN_SET_ONLY_SWITCH
+
     #define USES_P076   // HLW8012 Blitzwolf SHP2
 
-//    #define DEFAULT_PIN_STATUS_LED 13 // GPIO13 Blue Led (0 = On, 1 = Off)
+    #define USES_P003   // Pulse
+    #define USES_P004   // Dallas
+    #define USES_P025   // ADS1115
+    #define USES_P026   // SysInfo
+    #define USES_P033   // Dummy
+    #define USES_P037   // MQTTImport
+
+    #define DEFAULT_PIN_STATUS_LED 0
+#endif
+
+#ifdef PLUGIN_SET_SONOFF_DUAL_R2
+    // Undef first to prevent compiler warnings
+    #undef DEFAULT_PIN_STATUS_LED
+
+    #define CONTROLLER_SET_ONLY_MQTT
+    #define NOTIFIER_SET_NONE
+    #define PLUGIN_SET_ONLY_SWITCH
+
+    #define USES_P003   // Pulse
+    #define USES_P004   // Dallas
+    #define USES_P025   // ADS1115
+    #define USES_P026   // SysInfo
+    #define USES_P033   // Dummy
+    #define USES_P037   // MQTTImport
+
+    #define DEFAULT_PIN_STATUS_LED 13 // GPIO13 Blue Led (0 = On, 1 = Off)
 #endif
 
 #ifdef PLUGIN_SET_SONOFF_S20
@@ -372,8 +407,8 @@ To create/register a plugin, you have to :
 
     // from testing
     #define USES_P072   // HDC1080
-    #define USES_P076   // HLW8012 Blitzwolf SHP2
-    #define USES_P077   // CSE7766 Sonoff POW2
+//    #define USES_P076   // HLW8012 Blitzwolf SHP2
+//    #define USES_P077   // CSE7766 Sonoff POW2
 
     // from playground
     #define USES_P118  // CCS811
@@ -443,8 +478,8 @@ To create/register a plugin, you have to :
 #ifdef CONTROLLER_SET_STABLE
   #ifdef _735LABS
     #define USES_C005   // OpenHAB MQTT
-    #define USES_C010   // Generic UDP
-    #define USES_C011   // Generic HTTP Advanced
+//    #define USES_C010   // Generic UDP
+//    #define USES_C011   // Generic HTTP Advanced
   #else
     #define USES_C001   // Domoticz HTTP
     #define USES_C002   // Domoticz MQTT

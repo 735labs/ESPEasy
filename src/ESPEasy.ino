@@ -146,12 +146,14 @@ void setup()
     RTC.bootCounter++;
     readUserVarFromRTC();
 
+#if defined(ESP8266_FAT)
     if (RTC.deepSleepState == 1)
     {
       log = F("INIT : Rebooted from deepsleep #");
       lastBootCause=BOOT_CAUSE_DEEP_SLEEP;
     }
     else
+#endif
       log = F("INIT : Warm boot #");
 
     log += RTC.bootCounter;
@@ -167,6 +169,8 @@ void setup()
       lastBootCause = BOOT_CAUSE_COLD_BOOT;
     log = F("INIT : Cold Boot");
   }
+//  log += F(" - Restart Reason: ");
+//  log += ESP.getResetReason();
 
   RTC.deepSleepState=0;
   saveToRTC();
@@ -174,7 +178,9 @@ void setup()
   addLog(LOG_LEVEL_INFO, log);
 
   fileSystemCheck();
+#if defined(ESP8266_FAT)
   progMemMD5check();
+#endif
   LoadSettings();
 
 //  setWifiMode(WIFI_STA);
@@ -204,9 +210,10 @@ void setup()
 //    Serial.setDebugOutput(true);
   }
 
+#if defined(ESP8266_FAT)
   if (Settings.Build != BUILD)
     BuildFixes();
-
+#endif
 
   log = F("INIT : Free RAM:");
   log += FreeMem();
@@ -540,6 +547,7 @@ void runOncePerSecond()
     RTC.flashDayCounter=0;
     saveToRTC();
     dailyResetCounter=0;
+    connectionFailures=0;
     String log = F("SYS  : Reset 24h counters");
     addLog(LOG_LEVEL_INFO, log);
   }
@@ -548,7 +556,7 @@ void runOncePerSecond()
 
   if (Settings.ConnectionFailuresThreshold)
     if (connectionFailures > Settings.ConnectionFailuresThreshold)
-      delayedReboot(60);
+      delayedReboot(37);
 
   if (cmd_within_mainloop != 0)
   {
