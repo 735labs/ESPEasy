@@ -391,7 +391,7 @@ void loop()
     // Somehow the WiFi has entered a limbo state.
     // FIXME TD-er: This may happen on WiFi config with AP_STA mode active.
 //    addLog(LOG_LEVEL_ERROR, F("Wifi status out sync"));
-//    resetWiFi();
+    resetWiFi();
   }
   if (!processedConnectAPmode) processConnectAPmode();
   if (!processedDisconnectAPmode) processDisconnectAPmode();
@@ -789,7 +789,7 @@ void setSystemTimer(unsigned long timer, byte plugin, short taskIndex, int Par1,
     if (systemTimers[x].timer != 0)
     {
       if ((systemTimers[x].plugin == plugin) && systemTimers[x].TaskIndex == taskIndex && (systemTimers[x].Par1 == Par1))
-      {        
+      {
         firstAvailable = x;
         break;
       }
@@ -804,7 +804,7 @@ void setSystemTimer(unsigned long timer, byte plugin, short taskIndex, int Par1,
     addLog(LOG_LEVEL_ERROR, F(NOTAVAILABLE_SYSTEM_TIMER_ERROR));
   }
   else
-  {    
+  {
     systemTimers[firstAvailable].plugin = plugin;
     systemTimers[firstAvailable].TaskIndex = taskIndex;
     systemTimers[firstAvailable].Par1 = Par1;
@@ -816,7 +816,7 @@ void setSystemTimer(unsigned long timer, byte plugin, short taskIndex, int Par1,
       ? millis() + timer
       : 0;
   }
-  
+
 }
 
 //EDWIN: this function seems to be unused?

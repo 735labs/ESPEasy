@@ -196,7 +196,7 @@ void sendContentBlocking(String& data) {
 
   TXBuffer.sentBytes += length;
   data = "";
-  yield();
+  delay(0);
 }
 
 void sendHeaderBlocking(bool json) {
@@ -230,7 +230,7 @@ void sendHeaderBlocking(bool json) {
     delay(1);
   }
 #endif
-  yield();
+  delay(0);
 }
 
 void sendHeadandTail(const String& tmplName, boolean Tail = false) {
